@@ -4,3 +4,6 @@ nltk
 pandas
 wordcloud
 textblob
+ultralytics
+opencv-python
+pillow
