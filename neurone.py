@@ -9,6 +9,20 @@ def sigmoid(x):
 def sigmoid_derivative(x):
     return x * (1 - x)
 
+# Fonction de coût : Mean Squared Error (MSE)
+def mean_squared_error(y_true, y_pred):
+    """
+    Calcule l'erreur quadratique moyenne.
+    
+    Args:
+        y_true: Valeurs cibles
+        y_pred: Valeurs prédites
+    
+    Returns:
+        L'erreur quadratique moyenne
+    """
+    return np.mean((y_true - y_pred) ** 2)
+
 # Fonctions de visualisation
 def plot_activation_functions():
     """
@@ -91,19 +105,118 @@ class Neurone:
         return sigmoid(weighted_sum)
 
     def train(self, inputs, target, learning_rate=0.1):
-        # Prédiction
+        """
+        Entraînement avec descente de gradient basée sur la fonction de coût MSE.
+        
+        Gradient de MSE pour un exemple:
+        ∂C/∂w = -(y_true - y_pred) * sigmoid'(z) * x
+        ∂C/∂b = -(y_true - y_pred) * sigmoid'(z)
+        
+        où z = w·x + b et sigmoid'(z) = σ(z) * (1 - σ(z))
+        """
+        # Prédiction (forward pass)
         output = self.predict(inputs)
 
         # Calcul de l'erreur
         error = target - output
+        
+        # Calcul du gradient : δ = error * dérivée_sigmoïde
+        # Pour MSE, on a: ∂L/∂output = -2 * error / n
+        # Simplifié ici avec juste -error car on normalise avec le learning_rate
+        delta = error * sigmoid_derivative(output)
 
-        # Ajustement des poids et du biais
-        self.weights += learning_rate * error * sigmoid_derivative(output) * inputs
-        # S'assurer que le biais reste un scalaire
-        self.bias += float(learning_rate * error * sigmoid_derivative(output))
+        # Mise à jour des poids : w = w - learning_rate * (-∂L/∂w)
+        # Soit : w = w + learning_rate * δ * inputs
+        self.weights += learning_rate * delta * inputs
+        
+        # Mise à jour du biais : b = b + learning_rate * δ
+        self.bias += float(learning_rate * delta)
         
         # Retourner l'erreur absolue pour le suivi
         return abs(error)
+    
+    def train_batch(self, X, y, learning_rate=0.1):
+        """
+        Entraînement sur un batch complet avec descente de gradient.
+        Calcule le gradient moyen sur tous les exemples avant de mettre à jour.
+        
+        EXPLICATION MATHÉMATIQUE DU GRADIENT :
+        =======================================
+        
+        Pour un neurone : output = σ(z) où z = w·x + b et σ = sigmoïde
+        Fonction de coût : C = (1/2) * (y_true - output)²
+        
+        Par la règle de la chaîne (chain rule) :
+        ∂C/∂w = ∂C/∂output × ∂output/∂z × ∂z/∂w
+        
+        Détails :
+        1) ∂C/∂output = -(y_true - output) = -error
+        2) ∂output/∂z = σ'(z) = σ(z) × (1 - σ(z)) = output × (1 - output)
+           ⚠️ C'EST ICI qu'on utilise la dérivée de la sigmoïde !
+        3) ∂z/∂w = x (l'entrée)
+        
+        Donc : ∂C/∂w = -error × σ'(z) × x
+        
+        Pour le biais : ∂C/∂b = -error × σ'(z) × 1 = -error × σ'(z)
+        
+        La dérivée de sigmoïde est ESSENTIELLE car elle représente comment
+        la sortie du neurone change quand on modifie légèrement z.
+        Sans elle, on ignorerait l'effet de la fonction d'activation !
+        
+        Args:
+            X: Matrice des entrées (n_samples, n_features)
+            y: Vecteur des cibles (n_samples,)
+            learning_rate: Taux d'apprentissage
+        
+        Returns:
+            Le coût MSE moyen sur le batch
+        """
+        n_samples = len(X)
+        
+        # Initialisation des gradients
+        grad_weights = np.zeros_like(self.weights)
+        grad_bias = 0.0
+        
+        # Stockage des prédictions pour calculer le coût
+        predictions = []
+        
+        # Calcul des gradients pour chaque exemple
+        for i in range(n_samples):
+            # Forward pass
+            output = self.predict(X[i])
+            predictions.append(output)
+            
+            # Calcul de l'erreur : (y_true - y_pred)
+            error = y[i] - output
+            
+            # ⚠️ ÉTAPE CRUCIALE : Calcul du gradient local
+            # delta = ∂C/∂z = ∂C/∂output × ∂output/∂z
+            #               = -error × sigmoid'(output)
+            # 
+            # sigmoid'(output) = output × (1 - output) est la dérivée de sigmoïde
+            # Elle mesure la "sensibilité" de la sortie aux changements de z
+            delta = error * sigmoid_derivative(output)
+            
+            # Accumulation des gradients
+            # ∂C/∂w = delta × x
+            grad_weights += delta * X[i]
+            # ∂C/∂b = delta
+            grad_bias += delta
+        
+        # Moyenne des gradients sur le batch
+        grad_weights /= n_samples
+        grad_bias /= n_samples
+        
+        # Mise à jour des paramètres (descente de gradient)
+        # θ_new = θ_old - learning_rate × ∂C/∂θ
+        # Ici on a un + car delta contient déjà le signe négatif de l'erreur
+        self.weights += learning_rate * grad_weights
+        self.bias += float(learning_rate * grad_bias)
+        
+        # Calcul du coût MSE
+        cost = mean_squared_error(y, np.array(predictions))
+        
+        return cost
 
 
 # Exemple d'utilisation
@@ -131,33 +244,33 @@ if __name__ == "__main__":
     weights_history = []
     bias_history = []
     
-    # Entraînement
-    print(f"\nDébut de l'entraînement...")
-    n_epochs = 150000
+    # Entraînement avec descente de gradient par batch
+    print(f"\nDébut de l'entraînement (descente de gradient par batch)...")
+    n_epochs = 15000  # Moins d'époques nécessaires avec batch gradient descent
+    
     for epoch in range(n_epochs):
-        epoch_errors = []
-        for i in range(len(X)):
-            error = neurone.train(X[i], y[i])
-            epoch_errors.append(error)
+        # Entraînement sur tout le batch
+        cost = neurone.train_batch(X, y, learning_rate=0.5)
         
-        # Enregistrer l'erreur moyenne et les paramètres toutes les 10 époques
-        if epoch % 10 == 0:
-            avg_error = np.mean(epoch_errors)
-            errors_history.append(avg_error)
-            weights_history.append(neurone.weights.copy())
-            bias_history.append(neurone.bias)
+        # Enregistrer le coût et les paramètres
+        errors_history.append(cost)
+        weights_history.append(neurone.weights.copy())
+        bias_history.append(neurone.bias)
+        
+        # Affichage périodique
+        if epoch % 1000 == 0:
+            print(f"Époque {epoch}/{n_epochs}, Coût MSE: {cost:.6f}")
 
     # Calculer le nombre total d'itérations
-    total_iterations = n_epochs * len(X)
+    total_iterations = n_epochs
     
     # Afficher les valeurs finales des poids et du biais
     print(f"\n{'='*60}")
     print("RÉSULTATS DE L'ENTRAÎNEMENT")
     print(f"{'='*60}")
     print(f"Nombre d'époques: {n_epochs}")
-    print(f"Nombre d'exemples par époque: {len(X)}")
-    print(f"Nombre total d'itérations: {total_iterations}")
-    print(f"Erreur finale moyenne: {errors_history[-1]:.6f}")
+    print(f"Méthode: Descente de gradient par batch (vraie descente de gradient)")
+    print(f"Coût MSE final: {errors_history[-1]:.6f}")
     print(f"Poids finaux: {neurone.weights}")
     print(f"Biais final: {neurone.bias}")
     
@@ -165,14 +278,14 @@ if __name__ == "__main__":
     print(f"\n{'='*60}")
     print("PRÉDICTIONS")
     print(f"{'='*60}")
-    for x in X:
+    for i, x in enumerate(X):
         sortie = neurone.predict(x)
         # Conversion en float pour éviter l'erreur de format
         if isinstance(sortie, np.ndarray):
             sortie = float(sortie)
         # Seuil pour obtenir une sortie binaire
         sortie_binaire = 1 if sortie >= 0.5 else 0
-        print(f"Entrée: {x}, Sortie: {sortie:.4f}, Sortie binaire: {sortie_binaire}")
+        print(f"Entrée: {x}, Sortie: {sortie:.4f}, Sortie binaire: {sortie_binaire}, Cible: {y[i]}")
 
     # Affichage des graphiques d'entraînement
     print("\nAffichage de l'évolution de l'entraînement...")
@@ -181,4 +294,4 @@ if __name__ == "__main__":
     # Affichage de la fonction d'activation et de sa dérivée
     # print("\nAffichage de la fonction sigmoïde et de sa dérivée...")
     # plot_activation_functions()
- 
+
