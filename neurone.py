@@ -258,9 +258,24 @@ if __name__ == "__main__":
         except ValueError:
             print("Veuillez entrer un nombre entier valide.")
     
+    # Saisie du learning rate par l'utilisateur
+    while True:
+        try:
+            learning_rate = float(input("Entrez le learning rate (par défaut 0.5) : ") or "0.5")
+            if 0 < learning_rate <= 10:
+                break
+            else:
+                print("Le learning rate doit être entre 0 et 10.")
+        except ValueError:
+            print("Veuillez entrer un nombre décimal valide.")
+    
+    print(f"\nConfiguration de l'entraînement:")
+    print(f"  - Nombre d'époques: {n_epochs}")
+    print(f"  - Learning rate: {learning_rate}")
+    
     for epoch in range(n_epochs):
         # Entraînement sur tout le batch
-        cost = neurone.train_batch(X, y, learning_rate=0.5)
+        cost = neurone.train_batch(X, y, learning_rate=learning_rate)
         
         # Enregistrer le coût et les paramètres
         errors_history.append(cost)
