@@ -28,10 +28,28 @@ Ce projet implémente un **neurone artificiel simple** (perceptron) capable d'ap
 
 ### Schéma du neurone
 
+#### Diagramme Mermaid
+
+```mermaid
+graph LR
+    X1[x₁] -->|w₁| S((Σ))
+    X2[x₂] -->|w₂| S
+    X3[x₃] -->|w₃| S
+    B[bias b] --> S
+    S -->|z = Σ wi·xi + b| A[σ z]
+    A -->|output| O[ŷ]
+    
+    style S fill:#bbdefb
+    style A fill:#fff9c4
+    style O fill:#c8e6c9
+```
+
+#### Représentation ASCII détaillée
+
 ```
       x₁ ──────┐
                │ w₁
-      x₂ ──────┼───► z= (Σ(xi * w1) + b) ──► σ(z) ──► output
+      x₂ ──────┼───► z = Σ wi·xi + b ──► σ(z) ──► output
                │ w₂
       x₃ ──────┘
                ↓
@@ -85,6 +103,24 @@ z = Σ(wᵢ × xᵢ) + b = w·x + b
 
 ### Graphique
 
+#### Visualisation avec Mermaid
+
+```mermaid
+---
+config:
+  themeVariables:
+    xyChart:
+      plotColorPalette: "#2563eb, #dc2626"
+---
+xychart-beta
+    title "Fonction Sigmoïde σ(z) = 1/(1+e^-z)"
+    x-axis "z" [-6, -4, -2, 0, 2, 4, 6]
+    y-axis "σ(z)" 0 --> 1
+    line [0.002, 0.018, 0.119, 0.5, 0.881, 0.982, 0.998]
+```
+
+#### Représentation ASCII (pour terminaux)
+
 ```
 σ(z)
   1 ┤        ╭───────
@@ -94,6 +130,35 @@ z = Σ(wᵢ × xᵢ) + b = w·x + b
   0 ┤╱─────────────────
     └─┴─┴─┴─┴─┴─┴─┴─┴─► z
    -4 -2 0  2  4
+```
+
+#### Graphique haute résolution
+
+Pour une visualisation parfaite, utilisez le script Python fourni :
+```python
+python neurone.py  # Affiche les graphiques matplotlib
+```
+
+**Ou créez le graphique manuellement :**
+```python
+import numpy as np
+import matplotlib.pyplot as plt
+
+z = np.linspace(-6, 6, 100)
+sigmoid = 1 / (1 + np.exp(-z))
+sigmoid_deriv = sigmoid * (1 - sigmoid)
+
+plt.figure(figsize=(10, 6))
+plt.plot(z, sigmoid, 'b-', linewidth=2, label='σ(z)')
+plt.plot(z, sigmoid_deriv, 'r--', linewidth=2, label="σ'(z)")
+plt.grid(True, alpha=0.3)
+plt.xlabel('z', fontsize=12)
+plt.ylabel('Valeur', fontsize=12)
+plt.title('Fonction Sigmoïde et sa Dérivée', fontsize=14, fontweight='bold')
+plt.legend(fontsize=12)
+plt.axhline(y=0.5, color='gray', linestyle=':', alpha=0.5)
+plt.axvline(x=0, color='gray', linestyle=':', alpha=0.5)
+plt.show()
 ```
 
 ### Dérivée de la sigmoïde
@@ -128,6 +193,26 @@ z = Σ(wᵢ × xᵢ) + b = w·x + b
 La **descente de gradient** est un algorithme d'optimisation qui minimise la fonction de coût en ajustant itérativement les paramètres dans la direction opposée au gradient.
 
 ### Visualisation
+
+#### Diagramme de la descente de gradient
+
+```mermaid
+graph TD
+    A[Initialisation<br/>w, b aléatoires] --> B[Forward Pass<br/>z = w·x + b<br/>ŷ = σ z]
+    B --> C[Calcul du coût<br/>C = MSE y, ŷ]
+    C --> D[Backward Pass<br/>∂C/∂w, ∂C/∂b]
+    D --> E[Mise à jour<br/>w = w - η·∂C/∂w<br/>b = b - η·∂C/∂b]
+    E --> F{Convergence?}
+    F -->|Non| B
+    F -->|Oui| G[Modèle entraîné]
+    
+    style A fill:#e3f2fd
+    style G fill:#c8e6c9
+    style D fill:#fff9c4
+    style E fill:#ffe0b2
+```
+
+#### Représentation ASCII
 
 ```
 Fonction de coût C(w)
