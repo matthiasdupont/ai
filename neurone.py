@@ -246,7 +246,17 @@ if __name__ == "__main__":
     
     # Entraînement avec descente de gradient par batch
     print(f"\nDébut de l'entraînement (descente de gradient par batch)...")
-    n_epochs = 15000  # Moins d'époques nécessaires avec batch gradient descent
+    
+    # Saisie du nombre d'époques par l'utilisateur
+    while True:
+        try:
+            n_epochs = int(input("\nEntrez le nombre d'époques (par défaut 15000) : ") or "15000")
+            if n_epochs > 0:
+                break
+            else:
+                print("Le nombre d'époques doit être supérieur à 0.")
+        except ValueError:
+            print("Veuillez entrer un nombre entier valide.")
     
     for epoch in range(n_epochs):
         # Entraînement sur tout le batch
