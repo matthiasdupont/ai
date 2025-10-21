@@ -31,7 +31,7 @@ Ce projet implémente un **neurone artificiel simple** (perceptron) capable d'ap
 ```
       x₁ ──────┐
                │ w₁
-      x₂ ──────┼───► Σ ──► σ(z) ──► output
+      x₂ ──────┼───► z= (Σ(xi * w1) + b) ──► σ(z) ──► output
                │ w₂
       x₃ ──────┘
                ↓
