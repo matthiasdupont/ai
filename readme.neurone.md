@@ -184,6 +184,21 @@ plt.show()
 - Tend vers 0 quand |z| → ∞
 - **Cette dérivée est cruciale pour la rétropropagation !**
 
+### Graphiques haute résolution
+
+Pour générer des graphiques haute qualité :
+
+```bash
+python generate_readme_plots.py
+```
+
+Cela créera des images PNG dans le dossier `images/` :
+
+#### Fonction Sigmoïde et sa dérivée
+![Fonction Sigmoïde](images/sigmoid_function.png)
+
+*Ce graphique montre la fonction d'activation sigmoïde et sa dérivée, cruciale pour la rétropropagation.*
+
 ---
 
 ## ⬇️ Descente de gradient
@@ -241,6 +256,13 @@ Où :
 - **∂C/∂b** = gradient de la fonction de coût par rapport à b
 
 ### Effet du learning rate
+
+#### Visualisation graphique
+![Descente de Gradient](images/gradient_descent.png)
+
+*Ce graphique compare l'impact de différentes valeurs de learning rate sur la convergence.*
+
+#### Représentation ASCII
 
 ```
 Learning rate trop petit (η = 0.01)
@@ -363,6 +385,13 @@ Car z = w·x + b, donc ∂z/∂wᵢ = xᵢ
 Car ∂z/∂b = 1
 
 ### Schéma complet de la rétropropagation
+
+#### Diagramme détaillé
+![Rétropropagation](images/backpropagation.png)
+
+*Ce diagramme montre le flux de calcul du forward pass et du backward pass avec tous les gradients.*
+
+#### Schéma ASCII simplifié
 
 ```
 Forward Pass (Propagation avant) :
@@ -500,6 +529,13 @@ Les poids et biais sont initialisés **aléatoirement** entre 0 et 1.
 ### Interprétation géométrique
 
 Le neurone apprend une **frontière de décision** (ligne) qui sépare les classes :
+
+#### Visualisation de l'apprentissage
+![Frontière de Décision](images/decision_boundary.png)
+
+*Ce graphique montre comment le neurone apprend à séparer les classes avant et après l'entraînement.*
+
+#### Représentation ASCII
 
 ```
   x₂
